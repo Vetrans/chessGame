@@ -1,0 +1,17 @@
+{
+  "name": "chess-1v1",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix server install",
+    "start": "node server/src/server.js",
+    "test:game": "cd server && node test-gameplay.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
