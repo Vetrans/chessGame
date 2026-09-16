@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   PlusCircle,
   ArrowRight,
   AlertCircle,
-  Swords,
   Shuffle,
   Users,
   Clock,
@@ -19,22 +18,6 @@ export function Home({
   connected,
 }) {
   const [joinCode, setJoinCode] = useState('');
-  const [invitedRoom, setInvitedRoom] = useState(null);
-
-  // Auto-detect invite link with ?room=XYZ in query parameters
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const roomParam = params.get('room');
-      if (roomParam) {
-        const cleanRoom = roomParam.trim().toUpperCase();
-        setJoinCode(cleanRoom);
-        setInvitedRoom(cleanRoom);
-      }
-    } catch {
-      // Ignore URL parsing errors
-    }
-  }, []);
 
   const handleJoinSubmit = (e) => {
     e.preventDefault();
@@ -50,7 +33,7 @@ export function Home({
       <div className="home-card">
         <header className="home-header">
           <div className="home-logo">
-            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2v3" />
               <path d="M10 5h4" />
               <path d="m7 9 2 4h6l2-4" />
@@ -61,7 +44,7 @@ export function Home({
             </svg>
           </div>
           <h1 className="home-title">Chess</h1>
-          <p className="home-subtitle">Instant 1v1 private games in your browser</p>
+          <p className="home-subtitle">1v1 Real-Time Chess</p>
 
           {/* Real-time live player counts */}
           <div className="live-stats-bar" title="Live players on this server">
@@ -79,13 +62,6 @@ export function Home({
           </div>
         </header>
 
-        {invitedRoom && (
-          <div className="invite-banner">
-            <Swords size={16} />
-            <span>Invited to join room <strong>{invitedRoom}</strong></span>
-          </div>
-        )}
-
         {error && (
           <div className="alert-box alert-error">
             <AlertCircle size={18} />
@@ -100,7 +76,7 @@ export function Home({
             onClick={onJoinRandom}
             disabled={!connected}
             type="button"
-            title="Quick play against an available waiting opponent or start a match"
+            title="Quick play against an available opponent or queue up"
           >
             <Shuffle size={18} />
             <span>Join Random Game</span>
@@ -117,11 +93,11 @@ export function Home({
             type="button"
           >
             <PlusCircle size={20} />
-            <span>Create Private Game</span>
+            <span>Create Game</span>
           </button>
 
           <div className="home-divider">
-            <span>or join with code</span>
+            <span>OR JOIN WITH CODE</span>
           </div>
 
           {/* Join game form */}
@@ -130,13 +106,13 @@ export function Home({
               <input
                 type="text"
                 className="join-input"
-                placeholder="Enter 6-letter room code"
+                placeholder="Enter Room Code (e.g. ABC123)"
                 value={joinCode}
                 onChange={(e) => {
                   if (error) onClearError();
                   setJoinCode(e.target.value.toUpperCase());
                 }}
-                maxLength={10}
+                maxLength={8}
                 disabled={!connected}
                 autoCapitalize="characters"
                 autoComplete="off"
@@ -147,7 +123,7 @@ export function Home({
                 type="submit"
                 disabled={!connected || !joinCode.trim()}
               >
-                <span>Join Match</span>
+                <span>Join Game</span>
                 <ArrowRight size={18} />
               </button>
             </div>

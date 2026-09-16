@@ -553,83 +553,173 @@ body {
   letter-spacing: -0.02em;
 }
 
-.game-header-actions {
+.game-header-controls {
+  width: 100%;
+  max-width: var(--board-size);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.game-brand .game-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.game-action-toolbar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.header-pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  padding: 0.38rem 0.75rem;
-  border-radius: 2rem;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.header-pill-btn:hover {
-  border-color: var(--accent-amber);
-  color: var(--text-primary);
-}
-
-.pill-label {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-.room-code-text {
-  font-weight: 700;
-  font-family: var(--font-mono);
-  color: var(--accent-amber);
-  letter-spacing: 0.05em;
-}
-
-.header-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.header-icon-btn:hover {
-  background-color: var(--bg-elevated);
-  color: var(--text-primary);
-}
-
-.btn-leave {
+.btn-toolbar {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background-color: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #f87171;
-  padding: 0.38rem 0.75rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.38rem 0.65rem;
   border-radius: 0.5rem;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: all 0.15s ease;
 }
 
-.btn-leave:hover {
+.btn-toolbar:hover:not(:disabled) {
+  background-color: #334155;
+  color: var(--text-primary);
+  border-color: #475569;
+}
+
+.btn-toolbar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toolbar-active {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.toolbar-draw-highlight {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #fde047;
+  border-color: rgba(234, 179, 8, 0.5);
+  animation: drawPulse 1.2s infinite alternate;
+}
+
+@keyframes drawPulse {
+  from { transform: scale(0.98); }
+  to { transform: scale(1.02); }
+}
+
+.btn-toolbar-resign {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.btn-toolbar-resign:hover:not(:disabled) {
   background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
 }
 
-.icon-success {
-  color: var(--accent-green);
+.confirm-card {
+  width: 100%;
+  max-width: 360px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.85rem;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
+}
+
+.confirm-icon {
+  color: #f59e0b;
+  margin-bottom: 0.75rem;
+}
+
+.confirm-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.confirm-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* Digital Chess Clock */
+.chess-clock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0b1120;
+  border: 1px solid #334155;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  min-width: 68px;
+  transition: all 0.2s ease;
+}
+
+.clock-digits {
+  font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  letter-spacing: 0.05em;
+}
+
+.clock-active {
+  border-color: #38bdf8;
+  background-color: #0f172a;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
+.clock-active .clock-digits {
+  color: #ffffff;
+}
+
+.clock-low {
+  border-color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.clock-low .clock-digits {
+  color: #fbbf24;
+}
+
+.clock-critical {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.15);
+  animation: clockPulse 1s infinite alternate;
+}
+
+.clock-critical .clock-digits {
+  color: #f87171;
+}
+
+@keyframes clockPulse {
+  from { opacity: 0.8; }
+  to { opacity: 1; }
 }
 
 .game-layout {
@@ -659,7 +749,7 @@ body {
   padding: 0.45rem 0.75rem;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border-radius: 0.6rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -672,7 +762,6 @@ body {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  width: 100%;
 }
 
 .player-color-indicator {
@@ -695,80 +784,18 @@ body {
 .player-meta {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  flex: 1;
-}
-
-.player-title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .player-title {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.player-color-tag {
-  color: var(--text-muted);
-  font-weight: 400;
-  font-size: 0.8rem;
-}
-
-.player-subrow {
+.player-badge-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.player-captured-pieces {
-  display: flex;
-  align-items: center;
-  gap: 1px;
-  min-height: 18px;
-}
-
-.captured-piece-mini {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.advantage-score {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-left: 0.3rem;
-  background-color: rgba(255, 255, 255, 0.08);
-  padding: 0.1rem 0.35rem;
-  border-radius: 0.25rem;
-}
-
-.player-connection {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.status-online {
-  background-color: var(--accent-green);
-}
-
-.status-offline {
-  background-color: var(--accent-red);
+  gap: 0.65rem;
 }
 
 .badge {
@@ -808,10 +835,11 @@ body {
   position: relative;
   width: var(--board-size);
   height: var(--board-size);
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
   user-select: none;
+  background-color: #2b313c;
 }
 
 .chess-board {
@@ -835,31 +863,51 @@ body {
   align-items: center;
   justify-content: center;
   outline: none;
-  cursor: default;
-}
-
-.square-interactive {
   cursor: pointer;
 }
 
 .square-light {
-  background-color: var(--square-light);
+  background-color: #eae9d2;
 }
 
 .square-dark {
-  background-color: var(--square-dark);
+  background-color: #4b7399;
 }
 
 .square-selected {
-  background-color: var(--square-selected) !important;
+  background-color: rgba(246, 246, 105, 0.75) !important;
 }
 
 .square-last-move {
-  background-color: var(--square-last-move) !important;
+  background-color: rgba(245, 246, 130, 0.45) !important;
 }
 
 .square-in-check {
   background: var(--square-check) !important;
+}
+
+/* Premove highlights */
+.square-premove-from {
+  background-color: rgba(99, 102, 241, 0.65) !important;
+}
+
+.square-premove-to {
+  background-color: rgba(129, 140, 248, 0.4) !important;
+}
+
+.premove-target-ring {
+  position: absolute;
+  width: 78%;
+  height: 78%;
+  border: 4px solid #818cf8;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: premovePulse 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes premovePulse {
+  from { transform: scale(0.95); opacity: 0.8; }
+  to { transform: scale(1.02); opacity: 1; }
 }
 
 /* Coordinates */

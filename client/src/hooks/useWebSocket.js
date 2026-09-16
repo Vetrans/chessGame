@@ -10,6 +10,7 @@ export function useWebSocket() {
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
   const [stats, setStats] = useState({ waiting: 0, playing: 0 });
+  const [drawOfferedToMe, setDrawOfferedToMe] = useState(false);
 
   useEffect(() => {
     wsService.connect();
@@ -32,6 +33,7 @@ export function useWebSocket() {
           setIsWaiting(true);
           setError(null);
           setNotification(null);
+          setDrawOfferedToMe(false);
           break;
 
         case 'game_started':
@@ -41,6 +43,7 @@ export function useWebSocket() {
           setGameState(msg.state);
           setError(null);
           setNotification(null);
+          setDrawOfferedToMe(false);
           break;
 
         case 'game_state':
@@ -48,6 +51,11 @@ export function useWebSocket() {
             ...prev,
             ...msg,
           }));
+          setDrawOfferedToMe(false);
+          break;
+
+        case 'draw_offered':
+          setDrawOfferedToMe(true);
           break;
 
         case 'game_over':
@@ -59,11 +67,13 @@ export function useWebSocket() {
               winner: msg.winner,
             },
           }));
+          setDrawOfferedToMe(false);
           break;
 
         case 'opponent_disconnected':
           setNotification(msg.message || 'Opponent disconnected. The game has ended.');
           setGameState((prev) => (prev ? { ...prev, status: 'abandoned' } : null));
+          setDrawOfferedToMe(false);
           break;
 
         case 'error':
@@ -84,12 +94,14 @@ export function useWebSocket() {
   const createGame = useCallback(() => {
     setError(null);
     setNotification(null);
+    setDrawOfferedToMe(false);
     wsService.send({ type: 'create_game' });
   }, []);
 
   const joinRandomGame = useCallback(() => {
     setError(null);
     setNotification(null);
+    setDrawOfferedToMe(false);
     wsService.send({ type: 'join_random_game' });
   }, []);
 
@@ -100,6 +112,7 @@ export function useWebSocket() {
     }
     setError(null);
     setNotification(null);
+    setDrawOfferedToMe(false);
     wsService.send({
       type: 'join_game',
       roomId: code.trim().toUpperCase(),
@@ -107,7 +120,7 @@ export function useWebSocket() {
   }, []);
 
   const makeMove = useCallback(
-    (from, to, promotion = 'q') => {
+    (from, to, promotion = 'q', isPremove = false) => {
       if (!roomId) return;
       setError(null);
       wsService.send({
@@ -116,10 +129,27 @@ export function useWebSocket() {
         from,
         to,
         promotion,
+        isPremove,
       });
     },
     [roomId]
   );
+
+  const resign = useCallback(() => {
+    if (!roomId) return;
+    wsService.send({
+      type: 'resign',
+      roomId,
+    });
+  }, [roomId]);
+
+  const offerDraw = useCallback(() => {
+    if (!roomId) return;
+    wsService.send({
+      type: 'offer_draw',
+      roomId,
+    });
+  }, [roomId]);
 
   const leaveGame = useCallback(() => {
     if (roomId) {
@@ -134,6 +164,7 @@ export function useWebSocket() {
     setIsWaiting(false);
     setError(null);
     setNotification(null);
+    setDrawOfferedToMe(false);
   }, [roomId]);
 
   const resetToHome = useCallback(() => {
@@ -143,6 +174,7 @@ export function useWebSocket() {
     setIsWaiting(false);
     setError(null);
     setNotification(null);
+    setDrawOfferedToMe(false);
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
@@ -156,10 +188,13 @@ export function useWebSocket() {
     error,
     notification,
     stats,
+    drawOfferedToMe,
     createGame,
     joinGame,
     joinRandomGame,
     makeMove,
+    resign,
+    offerDraw,
     leaveGame,
     resetToHome,
     clearError,

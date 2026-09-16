@@ -14,10 +14,13 @@ export function App() {
     error,
     notification,
     stats,
+    drawOfferedToMe,
     createGame,
     joinGame,
     joinRandomGame,
     makeMove,
+    resign,
+    offerDraw,
     leaveGame,
     resetToHome,
     clearError,
@@ -32,6 +35,9 @@ export function App() {
         gameState={gameState}
         onMove={makeMove}
         onLeave={leaveGame}
+        onResign={resign}
+        onOfferDraw={offerDraw}
+        drawOfferedToMe={drawOfferedToMe}
         error={error}
         notification={notification}
         onClearError={clearError}

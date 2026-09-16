@@ -89,7 +89,16 @@ export function setupWebSocket(server) {
               from: message.from,
               to: message.to,
               promotion: message.promotion,
+              isPremove: message.isPremove,
             });
+            break;
+
+          case 'resign':
+            gameManager.handleResign(ws, message.roomId);
+            break;
+
+          case 'offer_draw':
+            gameManager.handleDrawOffer(ws, message.roomId);
             break;
 
           case 'leave_game':

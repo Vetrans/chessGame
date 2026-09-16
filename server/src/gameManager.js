@@ -161,14 +161,14 @@ export class GameManager {
     this.triggerStatsChange();
   }
 
-  handleMove(ws, { roomId, from, to, promotion }) {
+  handleMove(ws, { roomId, from, to, promotion, isPremove = false }) {
     const game = this.getGameForSocket(ws, roomId);
     if (!game) {
       ws.send(JSON.stringify({ type: 'error', message: 'Game not found.' }));
       return;
     }
 
-    const moveResult = game.makeMove(ws, from, to, promotion);
+    const moveResult = game.makeMove(ws, from, to, promotion, isPremove);
     if (!moveResult.success) {
       ws.send(JSON.stringify({ type: 'error', message: moveResult.error }));
       return;
@@ -186,6 +186,32 @@ export class GameManager {
         type: 'game_over',
         result: currentState.gameOver.result,
         winner: currentState.gameOver.winner,
+      });
+      this.triggerStatsChange();
+    }
+  }
+
+  handleResign(ws, roomId) {
+    const game = this.getGameForSocket(ws, roomId);
+    if (!game) return;
+    const result = game.handleResign(ws);
+    if (result) {
+      game.broadcast({
+        type: 'game_state',
+        ...game.getState(),
+      });
+      this.triggerStatsChange();
+    }
+  }
+
+  handleDrawOffer(ws, roomId) {
+    const game = this.getGameForSocket(ws, roomId);
+    if (!game) return;
+    const result = game.handleDrawOffer(ws);
+    if (result?.agreed) {
+      game.broadcast({
+        type: 'game_state',
+        ...game.getState(),
       });
       this.triggerStatsChange();
     }
@@ -237,6 +263,7 @@ export class GameManager {
   removeGame(roomId) {
     const game = this.games.get(roomId);
     if (game) {
+      game.destroy();
       if (game.players.white?.ws) this.socketToRoom.delete(game.players.white.ws);
       if (game.players.black?.ws) this.socketToRoom.delete(game.players.black.ws);
       this.games.delete(roomId);

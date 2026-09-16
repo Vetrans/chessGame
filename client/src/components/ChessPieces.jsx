@@ -1,26 +1,26 @@
-import React from 'react';
+import React from "react";
 
 // Standard clean vector chess pieces (SVG paths)
-export function ChessPiece({ piece, color, size = '80%' }) {
-  const isWhite = color === 'w' || color === 'white';
-  const fillColor = isWhite ? '#ffffff' : '#262421';
-  const strokeColor = isWhite ? '#333333' : '#ffffff';
+export function ChessPiece({ piece, color, size = "80%" }) {
+  const isWhite = color === "w" || color === "white";
+  const fillColor = isWhite ? "#ffffff" : "#262421";
+  const strokeColor = isWhite ? "#333333" : "#ffffff";
   const strokeWidth = 1.5;
 
   const style = {
     width: size,
     height: size,
-    maxWidth: '100%',
-    maxHeight: '100%',
-    display: 'block',
-    userSelect: 'none',
-    pointerEvents: 'none',
+    maxWidth: "100%",
+    maxHeight: "100%",
+    display: "block",
+    userSelect: "none",
+    pointerEvents: "none",
   };
 
-  const type = piece ? piece.toLowerCase() : '';
+  const type = piece ? piece.toLowerCase() : "";
 
   switch (type) {
-    case 'p':
+    case "p":
       return (
         <svg viewBox="0 0 45 45" style={style}>
           <path
@@ -33,7 +33,7 @@ export function ChessPiece({ piece, color, size = '80%' }) {
         </svg>
       );
 
-    case 'r':
+    case "r":
       return (
         <svg viewBox="0 0 45 45" style={style}>
           <g
@@ -54,7 +54,7 @@ export function ChessPiece({ piece, color, size = '80%' }) {
         </svg>
       );
 
-    case 'n':
+    case "n":
       return (
         <svg viewBox="0 0 45 45" style={style}>
           <g
@@ -71,7 +71,7 @@ export function ChessPiece({ piece, color, size = '80%' }) {
         </svg>
       );
 
-    case 'b':
+    case "b":
       return (
         <svg viewBox="0 0 45 45" style={style}>
           <g
@@ -89,7 +89,7 @@ export function ChessPiece({ piece, color, size = '80%' }) {
         </svg>
       );
 
-    case 'q':
+    case "q":
       return (
         <svg viewBox="0 0 45 45" style={style}>
           <g
@@ -110,7 +110,7 @@ export function ChessPiece({ piece, color, size = '80%' }) {
         </svg>
       );
 
-    case 'k':
+    case "k":
       return (
         <svg viewBox="0 0 45 45" style={style}>
           <g
