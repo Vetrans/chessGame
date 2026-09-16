@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { ChessPiece } from './ChessPieces';
 import { PromotionModal } from './PromotionModal';
+import { sound } from '../utils/sound';
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
@@ -11,10 +12,12 @@ export function ChessBoard({
   playerColor,
   onMove,
   disabled = false,
+  orientation, // optional override
 }) {
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [possibleMoves, setPossibleMoves] = useState([]);
   const [pendingPromotion, setPendingPromotion] = useState(null);
+  const prevMoveRef = useRef(null);
 
   // Synchronized client-side Chess instance for calculating legal moves
   const chess = useMemo(() => {
@@ -29,6 +32,30 @@ export function ChessBoard({
     return instance;
   }, [gameState?.fen]);
 
+  // Audio feedback for moves, captures, checks, and game over
+  useEffect(() => {
+    const last = gameState?.lastMove;
+    if (last && JSON.stringify(last) !== JSON.stringify(prevMoveRef.current)) {
+      if (prevMoveRef.current !== null) {
+        if (gameState.inCheck) {
+          sound.playCheck();
+        } else if (last.san?.includes('x')) {
+          sound.playCapture();
+        } else {
+          sound.playMove();
+        }
+      }
+      prevMoveRef.current = last;
+    }
+  }, [gameState?.lastMove, gameState?.inCheck]);
+
+  useEffect(() => {
+    if (gameState?.isGameOver) {
+      const isWin = gameState?.gameOver?.winner === playerColor;
+      sound.playGameEnd(isWin);
+    }
+  }, [gameState?.isGameOver, gameState?.gameOver?.winner, playerColor]);
+
   // Clear selection whenever gameState updates
   useEffect(() => {
     setSelectedSquare(null);
@@ -36,8 +63,9 @@ export function ChessBoard({
     setPendingPromotion(null);
   }, [gameState?.fen]);
 
-  // Determine board orientation based on player's assigned color
-  const isFlipped = playerColor === 'black';
+  // Determine board orientation
+  const effectiveColor = orientation || playerColor || 'white';
+  const isFlipped = effectiveColor === 'black';
   const displayedFiles = useMemo(() => (isFlipped ? [...FILES].reverse() : FILES), [isFlipped]);
   const displayedRanks = useMemo(() => (isFlipped ? [...RANKS].reverse() : RANKS), [isFlipped]);
 
@@ -46,15 +74,13 @@ export function ChessBoard({
   // Identify check square for active king
   const checkSquare = useMemo(() => {
     if (!gameState?.inCheck) return null;
-    const currentTurn = chess.turn(); // 'w' or 'b'
+    const currentTurn = chess.turn();
     const board = chess.board();
     for (let r = 0; r < 8; r++) {
       for (let c = 0; c < 8; c++) {
         const piece = board[r][c];
         if (piece && piece.type === 'k' && piece.color === currentTurn) {
-          const file = FILES[c];
-          const rank = RANKS[r];
-          return `${file}${rank}`;
+          return `${FILES[c]}${RANKS[r]}`;
         }
       }
     }
@@ -67,14 +93,14 @@ export function ChessBoard({
     const pieceOnSquare = chess.get(square);
     const myPieceColor = playerColor === 'white' ? 'w' : 'b';
 
-    // If clicking the currently selected square, deselect
+    // Deselect if clicking the same square
     if (selectedSquare === square) {
       setSelectedSquare(null);
       setPossibleMoves([]);
       return;
     }
 
-    // If a piece was already selected and user clicked a target move square
+    // Move piece if legal target
     if (selectedSquare) {
       const isLegalTarget = possibleMoves.some((m) => m.to === square);
       if (isLegalTarget) {
@@ -96,7 +122,7 @@ export function ChessBoard({
       }
     }
 
-    // Otherwise, check if user clicked their own piece to select it
+    // Select piece if own color
     if (pieceOnSquare && pieceOnSquare.color === myPieceColor) {
       setSelectedSquare(square);
       const legalMoves = chess.moves({ square, verbose: true });
@@ -120,9 +146,9 @@ export function ChessBoard({
 
   return (
     <div className="board-wrapper">
-      <div className="chess-board">
+      <div className="chess-board" role="grid" aria-label="Chess board">
         {displayedRanks.map((rank, rankIndex) => (
-          <div key={rank} className="board-row">
+          <div key={rank} className="board-row" role="row">
             {displayedFiles.map((file, fileIndex) => {
               const square = `${file}${rank}`;
               const fileIdx = FILES.indexOf(file);
@@ -131,9 +157,7 @@ export function ChessBoard({
 
               const piece = chess.get(square);
               const isSelected = selectedSquare === square;
-              const isLastMoveFrom = lastMove?.from === square;
-              const isLastMoveTo = lastMove?.to === square;
-              const isLastMove = isLastMoveFrom || isLastMoveTo;
+              const isLastMove = lastMove?.from === square || lastMove?.to === square;
               const isCheck = checkSquare === square;
 
               const moveTarget = possibleMoves.find((m) => m.to === square);
@@ -143,26 +167,37 @@ export function ChessBoard({
               const isFirstCol = fileIndex === 0;
               const isLastRow = rankIndex === displayedRanks.length - 1;
 
+              const isMyPiece = piece && piece.color === (playerColor === 'white' ? 'w' : 'b');
+
               return (
                 <div
                   key={square}
                   className={`board-square ${isDark ? 'square-dark' : 'square-light'} ${
                     isSelected ? 'square-selected' : ''
-                  } ${isLastMove ? 'square-last-move' : ''} ${isCheck ? 'square-in-check' : ''}`}
+                  } ${isLastMove ? 'square-last-move' : ''} ${isCheck ? 'square-in-check' : ''} ${
+                    isMyPiece && isMyTurn ? 'square-interactive' : ''
+                  }`}
                   onClick={() => handleSquareClick(square)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSquareClick(square);
+                    }
+                  }}
                   data-square={square}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${square} ${piece ? `${piece.color === 'w' ? 'white' : 'black'} ${piece.type}` : 'empty'}`}
+                  role="gridcell"
+                  tabIndex={isMyTurn && (isMyPiece || isLegalMove) ? 0 : -1}
+                  aria-label={`${square}: ${
+                    piece ? `${piece.color === 'w' ? 'White' : 'Black'} ${piece.type.toUpperCase()}` : 'empty'
+                  }${isLegalMove ? ' (legal move)' : ''}`}
                 >
-                  {/* Rank coordinate label */}
+                  {/* Coordinates */}
                   {isFirstCol && (
                     <span className={`square-coordinate coord-rank ${isDark ? 'coord-dark' : 'coord-light'}`}>
                       {rank}
                     </span>
                   )}
 
-                  {/* File coordinate label */}
                   {isLastRow && (
                     <span className={`square-coordinate coord-file ${isDark ? 'coord-dark' : 'coord-light'}`}>
                       {file}
@@ -174,7 +209,7 @@ export function ChessBoard({
                     <ChessPiece
                       piece={piece.type}
                       color={piece.color}
-                      size="82%"
+                      size="84%"
                     />
                   )}
 
@@ -192,6 +227,7 @@ export function ChessBoard({
         <PromotionModal
           color={playerColor}
           onSelect={handlePromotionChoice}
+          onCancel={() => setPendingPromotion(null)}
         />
       )}
     </div>

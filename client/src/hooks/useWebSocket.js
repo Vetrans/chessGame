@@ -9,6 +9,7 @@ export function useWebSocket() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [stats, setStats] = useState({ waiting: 0, playing: 0 });
 
   useEffect(() => {
     wsService.connect();
@@ -18,6 +19,13 @@ export function useWebSocket() {
 
     const unsubMsg = wsService.subscribe((msg) => {
       switch (msg.type) {
+        case 'server_stats':
+          setStats({
+            waiting: msg.waiting || 0,
+            playing: msg.playing || 0,
+          });
+          break;
+
         case 'game_created':
           setRoomId(msg.roomId);
           setPlayerColor('white');
@@ -77,6 +85,12 @@ export function useWebSocket() {
     setError(null);
     setNotification(null);
     wsService.send({ type: 'create_game' });
+  }, []);
+
+  const joinRandomGame = useCallback(() => {
+    setError(null);
+    setNotification(null);
+    wsService.send({ type: 'join_random_game' });
   }, []);
 
   const joinGame = useCallback((code) => {
@@ -141,8 +155,10 @@ export function useWebSocket() {
     isWaiting,
     error,
     notification,
+    stats,
     createGame,
     joinGame,
+    joinRandomGame,
     makeMove,
     leaveGame,
     resetToHome,

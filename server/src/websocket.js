@@ -3,9 +3,22 @@ import { GameManager } from './gameManager.js';
 
 export function setupWebSocket(server) {
   const wss = new WebSocketServer({ server });
-  const gameManager = new GameManager();
 
-  // Heartbeat interval to detect stale/dead TCP connections
+  const broadcastStats = (stats) => {
+    const payload = JSON.stringify({
+      type: 'server_stats',
+      ...stats,
+    });
+    wss.clients.forEach((client) => {
+      if (client.readyState === 1 /* OPEN */) {
+        client.send(payload);
+      }
+    });
+  };
+
+  const gameManager = new GameManager(broadcastStats);
+
+  // Heartbeat interval to detect stale TCP connections
   const interval = setInterval(() => {
     wss.clients.forEach((ws) => {
       if (ws.isAlive === false) {
@@ -23,6 +36,18 @@ export function setupWebSocket(server) {
 
   wss.on('connection', (ws) => {
     ws.isAlive = true;
+
+    // Send initial server stats to newly connected client
+    try {
+      ws.send(
+        JSON.stringify({
+          type: 'server_stats',
+          ...gameManager.getStats(),
+        })
+      );
+    } catch (e) {
+      console.error('Error sending initial stats:', e);
+    }
 
     ws.on('pong', () => {
       ws.isAlive = true;
@@ -43,6 +68,19 @@ export function setupWebSocket(server) {
 
           case 'join_game':
             gameManager.joinGame(ws, message.roomId);
+            break;
+
+          case 'join_random_game':
+            gameManager.joinRandomGame(ws);
+            break;
+
+          case 'get_stats':
+            ws.send(
+              JSON.stringify({
+                type: 'server_stats',
+                ...gameManager.getStats(),
+              })
+            );
             break;
 
           case 'make_move':

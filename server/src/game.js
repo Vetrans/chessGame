@@ -48,12 +48,28 @@ export class ChessGame {
       return { success: false, error: 'It is not your turn.' };
     }
 
+    // Input validation
+    if (!from || !to || typeof from !== 'string' || typeof to !== 'string') {
+      return { success: false, error: 'Invalid move coordinates.' };
+    }
+
+    const cleanFrom = from.trim().toLowerCase();
+    const cleanTo = to.trim().toLowerCase();
+    if (!/^[a-h][1-8]$/.test(cleanFrom) || !/^[a-h][1-8]$/.test(cleanTo)) {
+      return { success: false, error: 'Move squares must be valid algebraic coordinates.' };
+    }
+
+    const cleanPromo = promotion ? String(promotion).trim().toLowerCase() : 'q';
+    if (!['q', 'r', 'b', 'n'].includes(cleanPromo)) {
+      return { success: false, error: 'Promotion piece must be q, r, b, or n.' };
+    }
+
     try {
       // Validate and apply move
       const moveResult = this.chess.move({
-        from,
-        to,
-        promotion: promotion ? promotion.toLowerCase() : 'q',
+        from: cleanFrom,
+        to: cleanTo,
+        promotion: cleanPromo,
       });
 
       if (!moveResult) {
@@ -73,7 +89,7 @@ export class ChessGame {
         if (this.chess.isCheckmate()) {
           gameOverData = {
             result: 'checkmate',
-            winner: playerColor, // The player who just moved delivered checkmate
+            winner: playerColor,
           };
         } else if (this.chess.isStalemate()) {
           gameOverData = {

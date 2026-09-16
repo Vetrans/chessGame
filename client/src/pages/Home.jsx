@@ -1,30 +1,90 @@
-import React, { useState } from 'react';
-import { PlusCircle, ArrowRight, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  PlusCircle,
+  ArrowRight,
+  AlertCircle,
+  Swords,
+  Shuffle,
+  Users,
+  Clock,
+} from 'lucide-react';
 
-export function Home({ onCreateGame, onJoinGame, error, onClearError, connected }) {
+export function Home({
+  onCreateGame,
+  onJoinGame,
+  onJoinRandom,
+  stats = { waiting: 0, playing: 0 },
+  error,
+  onClearError,
+  connected,
+}) {
   const [joinCode, setJoinCode] = useState('');
+  const [invitedRoom, setInvitedRoom] = useState(null);
+
+  // Auto-detect invite link with ?room=XYZ in query parameters
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = params.get('room');
+      if (roomParam) {
+        const cleanRoom = roomParam.trim().toUpperCase();
+        setJoinCode(cleanRoom);
+        setInvitedRoom(cleanRoom);
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }, []);
 
   const handleJoinSubmit = (e) => {
     e.preventDefault();
     if (!joinCode.trim()) return;
-    onJoinGame(joinCode.trim());
+    onJoinGame(joinCode.trim().toUpperCase());
   };
+
+  const waitingCount = stats?.waiting || 0;
+  const playingCount = stats?.playing || 0;
 
   return (
     <div className="home-container">
       <div className="home-card">
         <header className="home-header">
           <div className="home-logo">
-            <svg viewBox="0 0 45 45" width="48" height="48" fill="#38bdf8">
-              <g fill="#38bdf8" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" />
-                <path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,7.4 17.02,5.05 19.5,6.5 C 20,7.5 19,9 20,9 C 21,9 21.5,8 22,8.5 C 22.5,9 22.5,10 22,10 z" />
-              </g>
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2v3" />
+              <path d="M10 5h4" />
+              <path d="m7 9 2 4h6l2-4" />
+              <path d="M6 19h12" />
+              <path d="M5 22h14" />
+              <path d="M9 19v-4" />
+              <path d="M15 19v-4" />
             </svg>
           </div>
           <h1 className="home-title">Chess</h1>
-          <p className="home-subtitle">Minimal 1v1 private games</p>
+          <p className="home-subtitle">Instant 1v1 private games in your browser</p>
+
+          {/* Real-time live player counts */}
+          <div className="live-stats-bar" title="Live players on this server">
+            <div className="stat-item">
+              <Clock size={14} className="stat-icon-waiting" />
+              <span className="stat-label">Waiting in lobby:</span>
+              <span className="stat-val">{waitingCount}</span>
+            </div>
+            <span className="stat-separator">•</span>
+            <div className="stat-item">
+              <Users size={14} className="stat-icon-playing" />
+              <span className="stat-label">Playing now:</span>
+              <span className="stat-val">{playingCount}</span>
+            </div>
+          </div>
         </header>
+
+        {invitedRoom && (
+          <div className="invite-banner">
+            <Swords size={16} />
+            <span>Invited to join room <strong>{invitedRoom}</strong></span>
+          </div>
+        )}
 
         {error && (
           <div className="alert-box alert-error">
@@ -34,19 +94,34 @@ export function Home({ onCreateGame, onJoinGame, error, onClearError, connected 
         )}
 
         <div className="home-actions">
-          {/* Create game button */}
+          {/* Quick Play: Join random game */}
           <button
-            className="btn-primary"
+            className="btn-random"
+            onClick={onJoinRandom}
+            disabled={!connected}
+            type="button"
+            title="Quick play against an available waiting opponent or start a match"
+          >
+            <Shuffle size={18} />
+            <span>Join Random Game</span>
+            {waitingCount > 0 && (
+              <span className="badge-available">{waitingCount} waiting</span>
+            )}
+          </button>
+
+          {/* Create private game */}
+          <button
+            className="btn-primary btn-hero"
             onClick={onCreateGame}
             disabled={!connected}
             type="button"
           >
             <PlusCircle size={20} />
-            <span>Create Game</span>
+            <span>Create Private Game</span>
           </button>
 
           <div className="home-divider">
-            <span>OR</span>
+            <span>or join with code</span>
           </div>
 
           {/* Join game form */}
@@ -55,15 +130,16 @@ export function Home({ onCreateGame, onJoinGame, error, onClearError, connected 
               <input
                 type="text"
                 className="join-input"
-                placeholder="Enter Room Code (e.g. ABC123)"
+                placeholder="Enter 6-letter room code"
                 value={joinCode}
                 onChange={(e) => {
                   if (error) onClearError();
                   setJoinCode(e.target.value.toUpperCase());
                 }}
-                maxLength={8}
+                maxLength={10}
                 disabled={!connected}
                 autoCapitalize="characters"
+                autoComplete="off"
                 spellCheck="false"
               />
               <button
@@ -71,7 +147,7 @@ export function Home({ onCreateGame, onJoinGame, error, onClearError, connected 
                 type="submit"
                 disabled={!connected || !joinCode.trim()}
               >
-                <span>Join Game</span>
+                <span>Join Match</span>
                 <ArrowRight size={18} />
               </button>
             </div>
@@ -80,7 +156,7 @@ export function Home({ onCreateGame, onJoinGame, error, onClearError, connected 
 
         <div className="home-footer">
           <span className={`status-dot ${connected ? 'status-online' : 'status-offline'}`} />
-          <span>{connected ? 'Server Connected' : 'Connecting to Server...'}</span>
+          <span>{connected ? 'Server connected' : 'Connecting to game server...'}</span>
         </div>
       </div>
     </div>

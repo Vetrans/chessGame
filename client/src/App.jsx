@@ -13,8 +13,10 @@ export function App() {
     isWaiting,
     error,
     notification,
+    stats,
     createGame,
     joinGame,
+    joinRandomGame,
     makeMove,
     leaveGame,
     resetToHome,
@@ -52,6 +54,8 @@ export function App() {
     <Home
       onCreateGame={createGame}
       onJoinGame={joinGame}
+      onJoinRandom={joinRandomGame}
+      stats={stats}
       error={error}
       onClearError={clearError}
       connected={connected}

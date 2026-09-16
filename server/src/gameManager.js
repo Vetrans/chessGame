@@ -12,20 +12,49 @@ function generateRoomId() {
 }
 
 export class GameManager {
-  constructor() {
+  constructor(onStatsChange = null) {
     this.games = new Map(); // roomId -> ChessGame
     this.socketToRoom = new Map(); // ws -> roomId
+    this.onStatsChange = onStatsChange;
 
     // Periodic sweep for stale games (older than 2 hours)
     setInterval(() => {
       const now = Date.now();
       const TWO_HOURS = 2 * 60 * 60 * 1000;
+      let cleaned = false;
       for (const [roomId, game] of this.games.entries()) {
         if (now - game.createdAt > TWO_HOURS) {
           this.removeGame(roomId);
+          cleaned = true;
         }
       }
+      if (cleaned) {
+        this.triggerStatsChange();
+      }
     }, 15 * 60 * 1000);
+  }
+
+  getStats() {
+    let waiting = 0;
+    let playing = 0;
+    for (const game of this.games.values()) {
+      if (game.status === 'waiting') {
+        waiting += 1;
+      } else if (game.status === 'playing') {
+        playing += 2;
+      }
+    }
+    return { waiting, playing };
+  }
+
+  triggerStatsChange() {
+    if (typeof this.onStatsChange === 'function') {
+      try {
+        this.onStatsChange(this.getStats());
+      } catch (err) {
+        console.error('Error triggering stats change:', err);
+      }
+    }
   }
 
   createGame(ws) {
@@ -49,7 +78,25 @@ export class GameManager {
       })
     );
 
+    this.triggerStatsChange();
     return roomId;
+  }
+
+  joinRandomGame(ws) {
+    // Find first available waiting game where the creator is not this socket
+    let candidate = null;
+    for (const game of this.games.values()) {
+      if (game.status === 'waiting' && game.players.white?.ws !== ws) {
+        candidate = game;
+        break;
+      }
+    }
+
+    if (candidate) {
+      this.joinGame(ws, candidate.roomId);
+    } else {
+      this.createGame(ws);
+    }
   }
 
   joinGame(ws, rawRoomId) {
@@ -110,6 +157,8 @@ export class GameManager {
       color: 'black',
       state,
     });
+
+    this.triggerStatsChange();
   }
 
   handleMove(ws, { roomId, from, to, promotion }) {
@@ -138,6 +187,7 @@ export class GameManager {
         result: currentState.gameOver.result,
         winner: currentState.gameOver.winner,
       });
+      this.triggerStatsChange();
     }
   }
 
@@ -190,6 +240,7 @@ export class GameManager {
       if (game.players.white?.ws) this.socketToRoom.delete(game.players.white.ws);
       if (game.players.black?.ws) this.socketToRoom.delete(game.players.black.ws);
       this.games.delete(roomId);
+      this.triggerStatsChange();
     }
   }
 }
